@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
 import styles from '../styles/Record.module.css';
+// init commit
 
 const Record: React.FC = () => {
   const [recording, setRecording] = useState(false);
