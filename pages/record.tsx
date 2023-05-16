@@ -2,7 +2,6 @@ import React, { useState, useRef, useEffect } from 'react';
 import AudioPlayer from 'react-h5-audio-player';
 import 'react-h5-audio-player/lib/styles.css';
 import styles from '../styles/Record.module.css';
-// init commit
 
 const Record: React.FC = () => {
   const [recording, setRecording] = useState(false);
@@ -18,40 +17,41 @@ const Record: React.FC = () => {
       }
     };
 
-    const handleStop = async () => {
+    const handleStop = () => {
       const blob = new Blob(recordedChunks.current);
       const audioURL = URL.createObjectURL(blob);
       setAudioURL(audioURL);
       recordedChunks.current = [];
-
-      const formData = new FormData();
-      formData.append('file', blob, 'recording.wav');
-
-      const response = await fetch('https://notescribe.jawaunbrown.repl.co/extract_notes', {
-        method: 'POST',
-        body: formData,
-      });
-
-      if (!response.ok) {
-        console.error('Failed to extract notes', response);
-        return;
-      }
-
-      const data = await response.json();
-      setNotes(data.notes);
     };
 
     const initMediaRecorder = async () => {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       mediaRecorder.current = new MediaRecorder(stream);
       mediaRecorder.current.ondataavailable = handleDataAvailable;
-    
       mediaRecorder.current.addEventListener('stop', handleStop);
     };
-    
 
     initMediaRecorder();
   }, []);
+
+  const sendAudioData = async () => {
+    const blob = new Blob(recordedChunks.current);
+    const formData = new FormData();
+    formData.append('file', blob, 'recording.wav');
+
+    const response = await fetch('https://notescribe.jawaunbrown.repl.co/extract_notes', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      console.error('Failed to extract notes', response);
+      return;
+    }
+
+    const data = await response.json();
+    setNotes(data.notes);
+  };
 
   const handleStartRecording = () => {
     mediaRecorder.current?.start();
@@ -61,8 +61,8 @@ const Record: React.FC = () => {
   const handleStopRecording = () => {
     mediaRecorder.current?.stop();
     setRecording(false);
+    sendAudioData();
   };
-  
 
   return (
     <div className={styles.container}>
