@@ -61,7 +61,7 @@ const Record: React.FC = () => {
   const handleStopRecording = () => {
     mediaRecorder.current?.stop();
     setRecording(false);
-    sendAudioData();
+    setTimeout(() => sendAudioData(), 3000);
   };
 
   return (
