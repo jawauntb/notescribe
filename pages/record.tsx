@@ -9,6 +9,7 @@ const Record: React.FC = () => {
   const [notes, setNotes] = useState<string[]>([]);
   const mediaRecorder = useRef<MediaRecorder | null>(null);
   const recordedChunks = useRef<BlobPart[]>([]);
+  const recordTimeout = useRef<NodeJS.Timeout | null>(null);
 
   useEffect(() => {
     const handleDataAvailable = (e: BlobEvent) => {
@@ -39,7 +40,7 @@ const Record: React.FC = () => {
     const formData = new FormData();
     formData.append('file', blob, 'recording.wav');
 
-    const response = await fetch('https://notescribe.jawaunbrown.repl.co/extract_notes', {
+    const response = await fetch('https://notescribebackend.jawaunbrown.repl.co/extract_notes', {
       method: 'POST',
       body: formData,
     });
@@ -56,12 +57,21 @@ const Record: React.FC = () => {
   const handleStartRecording = () => {
     mediaRecorder.current?.start();
     setRecording(true);
+    recordTimeout.current = setTimeout(() => {
+      handleStopRecording();
+    }, 15000); // Stop recording after 15 seconds
   };
 
   const handleStopRecording = () => {
+    clearTimeout(recordTimeout.current!);
     mediaRecorder.current?.stop();
     setRecording(false);
     setTimeout(() => sendAudioData(), 3000);
+  };
+
+  const handleDeleteRecording = () => {
+    setAudioURL("");
+    setNotes([]);
   };
 
   return (
@@ -69,7 +79,12 @@ const Record: React.FC = () => {
       <button className={styles.button} onClick={recording ? handleStopRecording : handleStartRecording}>
         {recording ? "Stop Recording" : "Start Recording"}
       </button>
-      {audioURL && <AudioPlayer src={audioURL} />}
+      {audioURL && (
+        <div className={styles.audioContainer}>
+          <AudioPlayer src={audioURL} />
+          <button className={styles.deleteButton} onClick={handleDeleteRecording}>X</button>
+        </div>
+      )}
       {notes.length > 0 && <div className={styles.notes}>Notes: {notes.join(', ')}</div>}
     </div>
   );
